@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 // Import necessary packages for API integrations
-// import 'package:openai/openai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:openai/openai.dart';
 // import 'package:elevenlabs/elevenlabs.dart';
 // import 'package:plaid/plaid.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");  // Load the API keys
   runApp(YoniApp());
 }
 
@@ -76,23 +79,93 @@ class _YoniAppState extends State<YoniApp> {
   }
 }
 
-// Placeholder for ChatScreen
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
+  @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController _controller = TextEditingController();
+  final List<String> _messages = [];
+  bool _isLoading = false;
+
+  Future<void> sendMessage(String message) async {
+    setState(() {
+      _isLoading = true;
+      _messages.add("You: $message");
+    });
+
+    try {
+      String? apiKey = dotenv.env['API_KEY'];
+      OpenAI openAI = OpenAI(apiKey: apiKey!);
+      var response = await openAI.createChatCompletion(
+        model: "gpt-4",
+        messages: [
+          {"role": "user", "content": message}
+        ],
+      );
+
+      setState(() {
+        _messages.add("AI: ${response.choices.first.message.content}");
+      });
+    } catch (e) {
+      setState(() {
+        _messages.add("Error: $e");
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Chat with Yoni AI",
-              style: TextStyle(fontSize: 24, color: Colors.white),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(
+                    _messages[index],
+                    style: TextStyle(color: Colors.white),
+                  ),
+                );
+              },
             ),
-            // Add chat interface here
-          ],
-        ),
+          ),
+          if (_isLoading) CircularProgressIndicator(),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: "Type a message",
+                      hintStyle: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.send, color: Colors.white),
+                  onPressed: () {
+                    if (_controller.text.isNotEmpty) {
+                      sendMessage(_controller.text);
+                      _controller.clear();
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

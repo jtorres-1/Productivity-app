@@ -30,16 +30,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  openai: ^1.0.0
+  http: ^0.13.0
+  flutter_dotenv: ^5.0.2
   cupertino_icons: ^1.0.2
   flutter_markdown: ^0.6.18
-  http: ^1.1.0
   audioplayers: ^5.2.1
   path_provider: ^2.1.1
   image_picker: ^1.0.4
   just_audio: ^0.9.18
   flutter_tts: ^4.0.0
   speech_to_text: ^7.0.0
-  dart_openai: ^5.1.0
+  dart_openai: ^3.0.0
 
 
   # The following adds the Cupertino Icons font to your application.
