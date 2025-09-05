@@ -26,51 +26,35 @@ if (fs.existsSync(MESSAGED_USERS_FILE)) {
 
 // Config
 const subreddits = [
-  'jobsearchhacks',
-  'careerguidance',
-  'jobs',
-  'cscareerquestions',
-  'getemployed',
-  'resumes',
-  'careerchange',
-  'remotework',
-  'jobopenings',
-  'techjobs',
-  'jobhunt',
-  'getthatjob',
-  'jobsearch',
-  'remotejobs',        // people looking for remote work
-  'entrylevel',        // new grads & first-job seekers
-  'internships',       // students needing fast applications
-  'interview',         // prep + people frustrated after applying
-  'hiring'             // posts often from employers/recruiters
+  'resumes', 'careerguidance', 'jobsearch', 'jobsearchhacks', 'getthatjob',
+  'getemployed', 'jobhunt', 'remotework', 'remotejobs', 'techjobs',
+  'cscareerquestions', 'entrylevel', 'internships', 'interview',
+  'recruitinghell', 'jobs', 'jobopenings', 'hiring', 'careeradvice'
 ];
-
 
 const messages = [
-  `Hey, I know job hunting sucks right now. I built something that applies automatically so you don’t have to grind 50+ apps a day: https://jobbotpro.carrd.co`,
-
-  `Saw your post — I’ve been through the same endless applications. This bot auto-applies for you and actually saves time: https://jobbotpro.carrd.co`,
-
-  `Most people spend hours copy/pasting into job portals. This tool does it in the background for you: https://jobbotpro.carrd.co`,
-
-  `If you’re still sending tons of applications, this might help: https://jobbotpro.carrd.co\n\nIt’s an auto apply bot, frees up hours every week.`,
-
-  `Quick tip: instead of applying manually, this bot applies for you. I’ve seen it save people a lot of stress: https://jobbotpro.carrd.co`
+  `Quick heads up — I built an AI tool that rewrites your resume so it actually passes ATS and gets seen by recruiters. Check it out: https://linktr.ee/jtxcode`,
+  `Hey, saw your post. If resumes keep getting ignored, this tool makes them recruiter- and ATS-friendly automatically: https://linktr.ee/jtxcode`,
+  `Most resumes get filtered before a human even sees them. This AI fixes that — rewrite yours in seconds: https://linktr.ee/jtxcode`,
+  `Job hunting is stressful enough. This tool instantly optimizes your resume so you stand out and land interviews faster: https://linktr.ee/jtxcode`,
+  `Quick tip: outdated resumes get ghosted. I made an AI that refreshes yours for ATS and recruiters — takes 30 seconds: https://linktr.ee/jtxcode`
 ];
 
-
 const getRandomMessage = () => messages[Math.floor(Math.random() * messages.length)];
+const shuffle = arr => arr.sort(() => Math.random() - 0.5);
 const wait = ms => new Promise(res => setTimeout(res, ms));
-const MAX_DMS_PER_DAY = 30;
+
+const MAX_DMS_PER_DAY = 25;
 let dmCount = 0;
 
 // Bot main
 async function runBot() {
   try {
-    for (const sub of subreddits) {
+    const shuffledSubs = shuffle([...subreddits]);
+
+    for (const sub of shuffledSubs) {
       if (dmCount >= MAX_DMS_PER_DAY) {
-        console.log('🔒 Daily DM limit reached. Exiting.');
+        console.log(`🔒 Daily DM limit (${MAX_DMS_PER_DAY}) reached. Exiting for today.`);
         return;
       }
 
@@ -78,10 +62,7 @@ async function runBot() {
       const posts = await r.getSubreddit(sub).getHot({ limit: 5 });
 
       for (const post of posts) {
-        if (dmCount >= MAX_DMS_PER_DAY) {
-          console.log('🔒 Daily DM limit reached. Exiting.');
-          return;
-        }
+        if (dmCount >= MAX_DMS_PER_DAY) break;
 
         const username = post.author.name;
 
@@ -105,9 +86,10 @@ async function runBot() {
               text: getRandomMessage()
             });
 
-            console.log(`✅ DM sent to u/${username}`);
+            console.log(`✅ DM sent to u/${username} (${dmCount + 1}/${MAX_DMS_PER_DAY})`);
             dmCount++;
             messagedUsers.push(username);
+
             fs.writeFileSync(MESSAGED_USERS_FILE, JSON.stringify(messagedUsers, null, 2));
             sent = true;
           } catch (err) {
@@ -121,7 +103,10 @@ async function runBot() {
           }
         }
 
-        await wait(30000); // 30 sec delay to reduce ban risk
+        // random delay 30–90s
+        const delay = 30000 + Math.floor(Math.random() * 60000);
+        console.log(`⏳ Waiting ${(delay / 1000).toFixed(0)}s before next message...`);
+        await wait(delay);
       }
     }
   } catch (err) {
@@ -129,7 +114,7 @@ async function runBot() {
   }
 
   console.log('🔁 Scan complete. Waiting 10 minutes before restarting...');
-  setTimeout(runBot, 10 * 60 * 1000); // wait 10 minutes before restarting
+  setTimeout(runBot, 10 * 60 * 1000);
 }
 
 runBot();
