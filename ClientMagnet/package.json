@@ -1,0 +1,20 @@
+{
+    "name": "clientmagnet",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "dependencies": {
+        "csv-writer": "^1.6.0",
+        "dotenv": "^17.2.2",
+        "nodemailer": "^7.0.6",
+        "playwright": "^1.55.0",
+        "snoowrap": "^1.23.0"
+    }
+}
