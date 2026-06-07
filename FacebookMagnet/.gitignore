@@ -1,0 +1,7 @@
+node_modules/
+.env
+session.json
+fb_sent.json
+fb_leads.csv
+runner.log
+*.json
